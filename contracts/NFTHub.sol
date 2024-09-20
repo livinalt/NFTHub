@@ -60,7 +60,7 @@ constructor(){
         require(_tokenId != 0, "Invalid token Id");
 
         ListedNFT storage nft = ListedNftId[_tokenId];
-        
+
             nft.tokenId = _tokenId;
             nft.owner = msg.sender;
             nft.price = _price;
@@ -70,7 +70,23 @@ constructor(){
 
  }
 
- function buyNFT() external{
+function buyNFT(uint256 _tokenId) external payable{
+
+        require(_tokenId != 0, "Invalid token Id");
+        require(msg.sender != address(0), "Address Zero Detected");
+        require(paymentToken != address(0), "Address Zero Detected");
+        require(address(this) != address(0), "Address Zero Detected");
+
+        ListedNFT storage nft = ListedNftId[_tokenId];
+
+        require(IERC20(paymentToken).balanceOf(msg.sender) >= nft.price, "insufficient price");
+
+        IERC20(paymentToken).transferFrom(msg.sender, nft.owner, nft.price);
+
+        nftToken.safeTransferFrom(address(this), msg.sender, _tokenId);
+
+        nft.isListed = false;
+        nft.owner = msg.sender;
 
  }
 
