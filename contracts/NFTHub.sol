@@ -2,6 +2,7 @@
 pragma solidity 0.8.24;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 
@@ -11,20 +12,10 @@ contract NFTHub{
 
     Token public nftToken;
 
+    address public paymentToken;  // could be usdt, usdc etc...
+
     address public owner;
     ERC721 public nftContractAddress; // this is the address that you want to mint
-
-/* 
-this contract is an nft marketplace where users can mint buy and sell nfts. 
-users can also list
- */
-
- // 3. mint the nft for sale
- // 2. the struct for list nft - price, nft id, 
- // 1. list the nft for sale ---we can have an array of listed nfts or mapping
- // 4. buy the nft 
- // 5. transfer ownership of the nft 
- // 6. mint the nft for sale
 
 
  struct ListedNFT{
@@ -60,17 +51,16 @@ constructor(){
         require(_tokenId != 0, "Invalid token Id");
 
         ListedNFT storage nft = ListedNftId[_tokenId];
-
-            nft.tokenId = _tokenId;
-            nft.owner = msg.sender;
-            nft.price = _price;
-            nft.isListed = true;
+        nft.tokenId = _tokenId;
+        nft.owner = msg.sender;
+        nft.price = _price;
+        nft.isListed = true;
 
         allListedNFT.push(nft);
 
  }
-
-function buyNFT(uint256 _tokenId) external payable{
+// buy involves transfereing ownership from one owner to another
+ function buyNFT(uint256 _tokenId) external payable{
 
         require(_tokenId != 0, "Invalid token Id");
         require(msg.sender != address(0), "Address Zero Detected");
@@ -90,15 +80,24 @@ function buyNFT(uint256 _tokenId) external payable{
 
  }
 
- function transferOwnership() external {
+ 
+// this transfers ownership of a token from one user to another
+ function transferOwnership(uint256 _tokenId) external {
+
+    ListedNFT memory nft = ListedNftId[_tokenId];
+
+    nftToken.safeTransferFrom(nft.owner, msg.sender, _tokenId);
 
  }
 
- function checkNFTBalance() external{
-
+ function checkNFTBalance() external view returns(uint256){
+    return nftToken.balanceOf(msg.sender);
+    
  }
 
-
-
+ function checkNFTOwner(uint256 _tokenId) external view returns(address){
+        ListedNFT memory nft = ListedNftId[_tokenId];
+        return nft.owner;
+ }
 
 }
